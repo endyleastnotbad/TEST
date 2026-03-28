@@ -3,10 +3,760 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Simple Page</title>
+  <title>Egg Timer</title>
+  <style>
+    :root {
+      --bg-top: #fff5d8;
+      --bg-bottom: #ffd9a8;
+      --panel: rgba(255, 252, 245, 0.9);
+      --text: #3b2a1d;
+      --accent: #d96d32;
+      --accent-dark: #a94717;
+      --pot: #4e6573;
+      --water: #79d7f2;
+      --water-deep: #46b8da;
+      --shadow: 0 20px 45px rgba(88, 46, 18, 0.16);
+      --soft: #ffe7bd;
+      --medium: #f7c873;
+      --hard: #d89f43;
+      --success: #5ca45c;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: "Trebuchet MS", "Segoe UI", sans-serif;
+      color: var(--text);
+      background:
+        radial-gradient(circle at top left, rgba(255, 255, 255, 0.7), transparent 30%),
+        linear-gradient(180deg, var(--bg-top), var(--bg-bottom));
+      display: grid;
+      place-items: center;
+      padding: 24px;
+    }
+
+    .app {
+      width: min(980px, 100%);
+      background: var(--panel);
+      border: 1px solid rgba(255, 255, 255, 0.65);
+      border-radius: 28px;
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: 1.1fr 0.9fr;
+    }
+
+    .section {
+      padding: 32px;
+    }
+
+    .hero {
+      background: linear-gradient(180deg, rgba(255, 246, 225, 0.95), rgba(255, 236, 207, 0.85));
+    }
+
+    h1 {
+      margin: 0 0 10px;
+      font-size: clamp(2rem, 4vw, 3.3rem);
+      line-height: 1;
+    }
+
+    .subtitle {
+      margin: 0 0 24px;
+      font-size: 1rem;
+      line-height: 1.6;
+      max-width: 54ch;
+    }
+
+    .choices {
+      display: grid;
+      gap: 12px;
+      margin-bottom: 22px;
+    }
+
+    .choice {
+      border: 2px solid transparent;
+      background: #fff;
+      border-radius: 18px;
+      padding: 16px 18px;
+      cursor: pointer;
+      transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+      box-shadow: 0 10px 25px rgba(122, 81, 42, 0.08);
+    }
+
+    .choice:hover,
+    .choice:focus-visible {
+      transform: translateY(-2px);
+      border-color: rgba(217, 109, 50, 0.35);
+      outline: none;
+    }
+
+    .choice.active {
+      border-color: var(--accent);
+      box-shadow: 0 14px 28px rgba(217, 109, 50, 0.18);
+    }
+
+    .choice strong {
+      display: block;
+      font-size: 1rem;
+      margin-bottom: 4px;
+    }
+
+    .choice span {
+      color: rgba(59, 42, 29, 0.75);
+      font-size: 0.95rem;
+    }
+
+    .timer-row {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      flex-wrap: wrap;
+      margin: 24px 0 18px;
+    }
+
+    .timer {
+      min-width: 180px;
+      padding: 18px 22px;
+      border-radius: 20px;
+      background: #fff;
+      box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.04);
+      font-size: clamp(2rem, 4vw, 3rem);
+      font-weight: 700;
+      letter-spacing: 0.05em;
+      text-align: center;
+    }
+
+    .controls {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    button {
+      border: 0;
+      border-radius: 999px;
+      padding: 13px 18px;
+      font: inherit;
+      font-weight: 700;
+      cursor: pointer;
+      transition: transform 0.15s ease, opacity 0.2s ease, background 0.2s ease;
+    }
+
+    button:hover {
+      transform: translateY(-1px);
+    }
+
+    .primary {
+      background: var(--accent);
+      color: #fff;
+    }
+
+    .secondary {
+      background: #f3e5d3;
+      color: var(--text);
+    }
+
+    .status {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      margin-top: 4px;
+      padding: 10px 14px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.75);
+      font-size: 0.95rem;
+    }
+
+    .status-dot {
+      width: 11px;
+      height: 11px;
+      border-radius: 50%;
+      background: var(--accent);
+      box-shadow: 0 0 0 0 rgba(217, 109, 50, 0.35);
+      animation: pulse 1.8s infinite;
+    }
+
+    .instructions {
+      margin-top: 22px;
+      background: rgba(255, 255, 255, 0.75);
+      border-radius: 22px;
+      padding: 20px;
+    }
+
+    .instructions h2,
+    .visual h2 {
+      margin: 0 0 14px;
+      font-size: 1.1rem;
+    }
+
+    .instructions ol {
+      margin: 0;
+      padding-left: 22px;
+      line-height: 1.7;
+    }
+
+    .visual {
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      background: linear-gradient(180deg, #fff7ed, #ffe3bf);
+    }
+
+    .pot-scene {
+      position: relative;
+      min-height: 360px;
+      margin-top: 18px;
+    }
+
+    .steam {
+      position: absolute;
+      top: 18px;
+      left: 50%;
+      width: 160px;
+      height: 80px;
+      transform: translateX(-50%);
+      opacity: 0.4;
+      pointer-events: none;
+    }
+
+    .steam::before,
+    .steam::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background:
+        radial-gradient(circle, rgba(255, 255, 255, 0.7) 0 20%, transparent 21% 100%);
+      filter: blur(10px);
+      animation: steamDrift 5s linear infinite;
+    }
+
+    .steam::after {
+      animation-delay: 2.5s;
+    }
+
+    .pot {
+      position: absolute;
+      left: 50%;
+      bottom: 36px;
+      width: min(320px, 100%);
+      height: 210px;
+      transform: translateX(-50%);
+    }
+
+    .pot-rim {
+      position: absolute;
+      left: 22px;
+      right: 22px;
+      top: 26px;
+      height: 20px;
+      border-radius: 999px;
+      background: #6f8694;
+      z-index: 3;
+    }
+
+    .pot-body {
+      position: absolute;
+      inset: 36px 0 0;
+      background: linear-gradient(180deg, #607987, var(--pot));
+      border-radius: 26px 26px 44px 44px;
+      box-shadow: inset 0 -12px 0 rgba(0, 0, 0, 0.08);
+      overflow: hidden;
+    }
+
+    .water {
+      position: absolute;
+      left: 14px;
+      right: 14px;
+      bottom: 14px;
+      height: 58%;
+      background: linear-gradient(180deg, var(--water), var(--water-deep));
+      border-radius: 20px 20px 32px 32px;
+      overflow: hidden;
+    }
+
+    .water::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background:
+        radial-gradient(circle at 20% 20%, rgba(255,255,255,0.35), transparent 25%),
+        radial-gradient(circle at 70% 40%, rgba(255,255,255,0.25), transparent 30%);
+      animation: waterShift 3.2s ease-in-out infinite;
+    }
+
+    .bubble {
+      position: absolute;
+      bottom: -16px;
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.72);
+      animation: rise linear infinite;
+      opacity: 0.85;
+    }
+
+    .egg {
+      position: absolute;
+      left: 50%;
+      bottom: 86px;
+      width: 86px;
+      height: 112px;
+      transform: translateX(-50%);
+      border-radius: 50% 50% 46% 46%;
+      background: var(--soft);
+      box-shadow: inset -8px -12px 0 rgba(0, 0, 0, 0.06);
+      transition: background 0.4s ease, transform 0.4s ease, box-shadow 0.4s ease;
+      z-index: 4;
+    }
+
+    .egg::after {
+      content: "";
+      position: absolute;
+      top: 18px;
+      left: 18px;
+      width: 20px;
+      height: 28px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.4);
+      transform: rotate(-22deg);
+    }
+
+    .egg.cooking {
+      animation: bob 1.8s ease-in-out infinite;
+    }
+
+    .egg.ready {
+      box-shadow: 0 0 0 10px rgba(92, 164, 92, 0.18), inset -8px -12px 0 rgba(0, 0, 0, 0.08);
+    }
+
+    .progress-wrap {
+      margin-top: 24px;
+      background: rgba(255, 255, 255, 0.72);
+      border-radius: 20px;
+      padding: 18px;
+    }
+
+    .progress-label {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 10px;
+      font-size: 0.95rem;
+    }
+
+    .progress-bar {
+      height: 16px;
+      background: rgba(78, 101, 115, 0.14);
+      border-radius: 999px;
+      overflow: hidden;
+    }
+
+    .progress-fill {
+      height: 100%;
+      width: 0%;
+      border-radius: inherit;
+      background: linear-gradient(90deg, #ffd46c, #ff9966);
+      transition: width 0.3s linear;
+    }
+
+    .ready-banner {
+      margin-top: 18px;
+      min-height: 54px;
+      padding: 14px 16px;
+      border-radius: 18px;
+      background: rgba(255, 255, 255, 0.72);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      font-weight: 700;
+      transition: background 0.3s ease, color 0.3s ease, transform 0.3s ease;
+    }
+
+    .ready-banner.show {
+      background: rgba(92, 164, 92, 0.16);
+      color: #275627;
+      transform: scale(1.02);
+      animation: celebrate 0.8s ease;
+    }
+
+    @keyframes rise {
+      0% {
+        transform: translateY(0) scale(0.6);
+        opacity: 0;
+      }
+      15% {
+        opacity: 0.8;
+      }
+      100% {
+        transform: translateY(-180px) scale(1);
+        opacity: 0;
+      }
+    }
+
+    @keyframes bob {
+      0%, 100% {
+        transform: translateX(-50%) translateY(0);
+      }
+      50% {
+        transform: translateX(-50%) translateY(-8px);
+      }
+    }
+
+    @keyframes pulse {
+      0% {
+        box-shadow: 0 0 0 0 rgba(217, 109, 50, 0.35);
+      }
+      70% {
+        box-shadow: 0 0 0 10px rgba(217, 109, 50, 0);
+      }
+      100% {
+        box-shadow: 0 0 0 0 rgba(217, 109, 50, 0);
+      }
+    }
+
+    @keyframes steamDrift {
+      0% {
+        transform: translateY(10px) scale(0.92);
+        opacity: 0;
+      }
+      30% {
+        opacity: 0.35;
+      }
+      100% {
+        transform: translateY(-18px) scale(1.05);
+        opacity: 0;
+      }
+    }
+
+    @keyframes celebrate {
+      0% {
+        transform: scale(0.98);
+      }
+      60% {
+        transform: scale(1.04);
+      }
+      100% {
+        transform: scale(1.02);
+      }
+    }
+
+    @keyframes waterShift {
+      0%, 100% {
+        transform: translateX(0);
+      }
+      50% {
+        transform: translateX(6px);
+      }
+    }
+
+    @media (max-width: 820px) {
+      .layout {
+        grid-template-columns: 1fr;
+      }
+
+      .section {
+        padding: 24px;
+      }
+
+      .pot-scene {
+        min-height: 320px;
+      }
+    }
+  </style>
 </head>
 <body>
-  <h1>Hello, world!</h1>
-  <p>This is a simple HTML file.</p>
+  <main class="app">
+    <div class="layout">
+      <section class="section hero">
+        <h1>Egg Timer</h1>
+        <p class="subtitle">
+          Pick your perfect boil, follow the simple steps, and watch your egg cook with a friendly animated timer.
+        </p>
+
+        <div class="choices" id="choices">
+          <button class="choice active" type="button" data-type="soft">
+            <strong>Soft boiled</strong>
+            <span>5 minutes • Jammy yolk and tender white</span>
+          </button>
+          <button class="choice" type="button" data-type="medium">
+            <strong>Medium boiled</strong>
+            <span>7 minutes • Creamy center with a firmer bite</span>
+          </button>
+          <button class="choice" type="button" data-type="hard">
+            <strong>Hard boiled</strong>
+            <span>10 minutes • Fully set yolk, picnic ready</span>
+          </button>
+        </div>
+
+        <div class="timer-row">
+          <div class="timer" id="timer">05:00</div>
+          <div class="controls">
+            <button class="primary" id="startBtn" type="button">Start</button>
+            <button class="secondary" id="pauseBtn" type="button">Pause</button>
+            <button class="secondary" id="resetBtn" type="button">Reset</button>
+          </div>
+        </div>
+
+        <div class="status">
+          <span class="status-dot"></span>
+          <span id="statusText">Ready to cook a soft boiled egg.</span>
+        </div>
+
+        <div class="instructions">
+          <h2>Cooking steps</h2>
+          <ol id="instructionList"></ol>
+        </div>
+      </section>
+
+      <section class="section visual">
+        <h2>Cooking progress</h2>
+        <div class="pot-scene">
+          <div class="steam"></div>
+          <div class="pot">
+            <div class="pot-rim"></div>
+            <div class="pot-body">
+              <div class="egg" id="egg"></div>
+              <div class="water" id="water"></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="progress-wrap">
+          <div class="progress-label">
+            <span id="progressLabel">Soft boiled progress</span>
+            <span id="progressPercent">0%</span>
+          </div>
+          <div class="progress-bar">
+            <div class="progress-fill" id="progressFill"></div>
+          </div>
+        </div>
+
+        <div class="ready-banner" id="readyBanner">
+          Timer waiting. Choose your egg and press start.
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <script>
+    const eggTypes = {
+      soft: {
+        label: "Soft boiled",
+        minutes: 5,
+        color: getComputedStyle(document.documentElement).getPropertyValue("--soft").trim(),
+        steps: [
+          "Bring a pot of water to a gentle boil.",
+          "Lower the egg into the water with a spoon.",
+          "Cook for 5 minutes for a silky yolk.",
+          "Cool briefly, crack the shell, and serve warm."
+        ]
+      },
+      medium: {
+        label: "Medium boiled",
+        minutes: 7,
+        color: getComputedStyle(document.documentElement).getPropertyValue("--medium").trim(),
+        steps: [
+          "Bring the water to a steady boil before adding the egg.",
+          "Carefully lower the egg into the pot.",
+          "Cook for 7 minutes for a creamy, richer center.",
+          "Transfer to cool water for a minute, then peel and enjoy."
+        ]
+      },
+      hard: {
+        label: "Hard boiled",
+        minutes: 10,
+        color: getComputedStyle(document.documentElement).getPropertyValue("--hard").trim(),
+        steps: [
+          "Fill a pot with enough water to cover the egg.",
+          "Bring the water to a boil and add the egg carefully.",
+          "Cook for 10 minutes until the yolk is fully set.",
+          "Move the egg to cool water, peel, and season to taste."
+        ]
+      }
+    };
+
+    const choiceButtons = document.querySelectorAll(".choice");
+    const timerEl = document.getElementById("timer");
+    const instructionList = document.getElementById("instructionList");
+    const statusText = document.getElementById("statusText");
+    const startBtn = document.getElementById("startBtn");
+    const pauseBtn = document.getElementById("pauseBtn");
+    const resetBtn = document.getElementById("resetBtn");
+    const progressFill = document.getElementById("progressFill");
+    const progressPercent = document.getElementById("progressPercent");
+    const progressLabel = document.getElementById("progressLabel");
+    const readyBanner = document.getElementById("readyBanner");
+    const egg = document.getElementById("egg");
+    const water = document.getElementById("water");
+
+    let currentType = "soft";
+    let totalSeconds = eggTypes[currentType].minutes * 60;
+    let remainingSeconds = totalSeconds;
+    let intervalId = null;
+
+    function formatTime(seconds) {
+      const mins = String(Math.floor(seconds / 60)).padStart(2, "0");
+      const secs = String(seconds % 60).padStart(2, "0");
+      return `${mins}:${secs}`;
+    }
+
+    function renderInstructions(type) {
+      instructionList.innerHTML = "";
+      eggTypes[type].steps.forEach((step) => {
+        const item = document.createElement("li");
+        item.textContent = step;
+        instructionList.appendChild(item);
+      });
+    }
+
+    function renderTimer() {
+      timerEl.textContent = formatTime(remainingSeconds);
+    }
+
+    function updateProgress() {
+      const progress = ((totalSeconds - remainingSeconds) / totalSeconds) * 100;
+      const safeProgress = Math.min(100, Math.max(0, progress));
+      progressFill.style.width = `${safeProgress}%`;
+      progressPercent.textContent = `${Math.round(safeProgress)}%`;
+
+      if (safeProgress === 0) {
+        egg.style.background = eggTypes[currentType].color;
+        egg.classList.remove("ready");
+        return;
+      }
+
+      const shade = 100 - Math.round(safeProgress * 0.18);
+      egg.style.background = `hsl(39, 78%, ${shade}%)`;
+    }
+
+    function setStatus(message) {
+      statusText.textContent = message;
+    }
+
+    function clearReadyState() {
+      readyBanner.classList.remove("show");
+      readyBanner.textContent = "Timer waiting. Choose your egg and press start.";
+      egg.classList.remove("ready");
+    }
+
+    function updateSelection(type) {
+      currentType = type;
+      totalSeconds = eggTypes[type].minutes * 60;
+      remainingSeconds = totalSeconds;
+      choiceButtons.forEach((button) => {
+        button.classList.toggle("active", button.dataset.type === type);
+      });
+      progressLabel.textContent = `${eggTypes[type].label} progress`;
+      renderInstructions(type);
+      renderTimer();
+      updateProgress();
+      egg.style.background = eggTypes[type].color;
+      clearReadyState();
+      setStatus(`Ready to cook a ${eggTypes[type].label.toLowerCase()} egg.`);
+    }
+
+    function stopTimer() {
+      if (intervalId) {
+        clearInterval(intervalId);
+        intervalId = null;
+      }
+      egg.classList.remove("cooking");
+    }
+
+    function finishTimer() {
+      stopTimer();
+      remainingSeconds = 0;
+      renderTimer();
+      updateProgress();
+      egg.classList.add("ready");
+      readyBanner.textContent = `${eggTypes[currentType].label} egg is ready. Time to serve!`;
+      readyBanner.classList.add("show");
+      setStatus(`${eggTypes[currentType].label} egg is ready.`);
+      window.alert(`${eggTypes[currentType].label} egg is ready!`);
+    }
+
+    function startTimer() {
+      if (intervalId) {
+        return;
+      }
+
+      if (remainingSeconds === 0) {
+        remainingSeconds = totalSeconds;
+        renderTimer();
+        updateProgress();
+        clearReadyState();
+      }
+
+      egg.classList.add("cooking");
+      setStatus(`Cooking ${eggTypes[currentType].label.toLowerCase()} egg...`);
+      readyBanner.classList.remove("show");
+      readyBanner.textContent = "Boiling in progress. Keep an eye on the bubbles.";
+
+      intervalId = setInterval(() => {
+        remainingSeconds -= 1;
+        renderTimer();
+        updateProgress();
+
+        if (remainingSeconds <= 0) {
+          finishTimer();
+        }
+      }, 1000);
+    }
+
+    function pauseTimer() {
+      if (!intervalId) {
+        return;
+      }
+      stopTimer();
+      setStatus(`Paused with ${formatTime(remainingSeconds)} left.`);
+      readyBanner.textContent = "Timer paused. Press start to continue cooking.";
+    }
+
+    function resetTimer() {
+      stopTimer();
+      remainingSeconds = totalSeconds;
+      renderTimer();
+      updateProgress();
+      egg.style.background = eggTypes[currentType].color;
+      clearReadyState();
+      setStatus(`Reset for a ${eggTypes[currentType].label.toLowerCase()} egg.`);
+    }
+
+    function createBubbles() {
+      for (let index = 0; index < 14; index += 1) {
+        const bubble = document.createElement("span");
+        bubble.className = "bubble";
+        bubble.style.left = `${8 + Math.random() * 84}%`;
+        bubble.style.animationDuration = `${2.2 + Math.random() * 2.4}s`;
+        bubble.style.animationDelay = `${Math.random() * 2.6}s`;
+        bubble.style.opacity = `${0.35 + Math.random() * 0.55}`;
+        bubble.style.transform = `scale(${0.55 + Math.random() * 0.75})`;
+        water.appendChild(bubble);
+      }
+    }
+
+    choiceButtons.forEach((button) => {
+      button.addEventListener("click", () => {
+        stopTimer();
+        updateSelection(button.dataset.type);
+      });
+    });
+
+    startBtn.addEventListener("click", startTimer);
+    pauseBtn.addEventListener("click", pauseTimer);
+    resetBtn.addEventListener("click", resetTimer);
+
+    createBubbles();
+    updateSelection(currentType);
+  </script>
 </body>
 </html>
